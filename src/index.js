@@ -1,21 +1,5 @@
-/**
- Copyright 2014-2015 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file except in compliance with the License. A copy of the License is located at
- http://aws.amazon.com/apache2.0/
- or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
- */
-
-/**
- * This sample shows how to create a simple Flash Card skill. The skill
- * supports 1 player at a time, and does not support games across sessions.
- */
-
 'use strict';
 
-/**
- * When editing your questions pay attention to your punctuation. Make sure you use question marks or periods.
- * Make sure the first answer is the correct one. Set at least 4 answers, any extras will be shuffled in.
- */
 var questions = [
     {
         '<audio src = "https://s3.amazonaws.com/two-scoops/cafe.mp3" />' : [
@@ -74,7 +58,7 @@ var questions = [
     {
         '<audio src = "https://s3.amazonaws.com/two-scoops/cioccolato.mp3" />' : [
         "milk chocolate",
-        "cioccolato di leche"
+        "cioccolato al latte"
         ]
     },
     {
@@ -97,7 +81,7 @@ var questions = [
     },
     {
         '<audio src = "https://s3.amazonaws.com/two-scoops/tiramisu.mp3" />' : [
-        "tiramisù",
+        "tiramisu",
         "tiramisù"
         ]
     },
@@ -132,23 +116,35 @@ var questions = [
         ]
     },
     {
-        '<audio src = "https://s3.amazonaws.com/two-scoops/mojito.mp3" />' : [
-        "mojito",
-        "mojito"
-        ]
-    },
-    {
         '<audio src = "https://s3.amazonaws.com/two-scoops/pesca.mp3" />' : [
         "peach and champagne",
         "pesca champagne"
         ]
     },
-    {
-        '<audio src = "https://s3.amazonaws.com/two-scoops/baileys.mp3" />' : [
-        "Baileys",
-        "Baileys"
-        ]
-    },
+    // {
+    //     '<audio src = "https://s3.amazonaws.com/two-scoops/mojito.mp3" />' : [
+    //     "mojito",
+    //     "mojito"
+    //     ]
+    // },
+    // {
+    //     '<audio src = "https://s3.amazonaws.com/two-scoops/panna.mp3" />' : [
+    //     "panna cotta",
+    //     "panna cotta"
+    //     ]
+    // },
+    // {
+    //     '<audio src = "https://s3.amazonaws.com/two-scoops/baileys.mp3" />' : [
+    //     "baileys",
+    //     "Baileys"
+    //     ]
+    // },
+    // {
+    //     '<audio src = "https://s3.amazonaws.com/two-scoops/guinness.mp3" />' : [
+    //     "guinness",
+    //     "Guinness"
+    //     ]
+    // },
 ];
 
 // Route the incoming request based on type (LaunchRequest, IntentRequest,
@@ -257,7 +253,9 @@ function onIntent(intentRequest, session, callback) {
     } else if ("AMAZON.CancelIntent" === intentName) {
         handleFinishSessionRequest(intent, session, callback);
     } else {
-        throw "Invalid intent";
+       // throw "Invalid intent";
+       console.log("Throwing invalid intent at this point");
+     getWelcomeResponse(callback);
     }
 }
 
@@ -282,8 +280,8 @@ var currentQuestionText = "";
 
 function getWelcomeResponse(callback) {
     var sessionAttributes = {},
-         speechOutput = "I will ask you about " + GAME_LENGTH.toString()
-            +  " Italian flavors, and you say the name in english. Let's begin. ",
+         speechOutput = "Hi there, I will ask you about " + GAME_LENGTH.toString()
+            +  " Italian flavors, and you can say the english name. Let's begin. ",
         shouldEndSession = false,
 
         gameQuestions = populateGameQuestions(),
@@ -425,13 +423,10 @@ function handleAnswerRequest(intent, session, callback) {
         speechOutput = "There is no game in progress. Do you want to start a new game? ";
         callback(sessionAttributes,
             buildSpeechletResponse(CARD_TITLE, speechOutput, speechOutput, false));
-    } else if (!answerSlotValid && !userGaveUp) {
-        // If the user provided answer isn't a number > 0 and < ANSWER_COUNT,
-        // return an error message to the user. Remember to guide the user into providing correct values.
-        var reprompt = session.attributes.speechOutput;
-        var speechOutput = "Your answer must be a gelato flavor " + repromptText;
+    } else if (!answerSlotValid && !userGaveUp ) {
+        var speechOutput = "Translate this italian flavor " + speechOutput;
         callback(session.attributes,
-            buildSpeechletResponse(CARD_TITLE, speechOutput, repromptText, false));
+            buildSpeechletResponse(CARD_TITLE, speechOutput, speechOutput, false));
     } else {
         var gameQuestions = session.attributes.questions,
             correctAnswerIndex = parseInt(session.attributes.correctAnswerIndex),
@@ -441,10 +436,14 @@ function handleAnswerRequest(intent, session, callback) {
             currentQuestionText = session.attributes.currentQuestionText;
 
         var speechOutputAnalysis = "";
+        var currentQuestionCorrect = false;
+        var CARD_TEXT = currentQuestionText + " / " + correctAnswerText;
 
         if (answerSlotValid && intent.slots.Answer.value == correctAnswerText) {
+       // if (answerSlotValid && intent.slots.Answer.value.toUpperCase() == correctAnswerText.toUpperCase()) {
             currentScore++;
-            
+            currentQuestionCorrect = true;
+
             //speechOutputAnalysis = "correct. ";
             switch (currentScore) {
                 case 5: speechOutputAnalysis = "Genius. "
@@ -459,26 +458,13 @@ function handleAnswerRequest(intent, session, callback) {
                 break;
             }
             
-            CARD_TEXT = currentQuestionText + " / " + correctAnswerText;
-            
         } else {
             if (!userGaveUp) {
-                //var currentQuestion = gameQuestions[currentQuestionIndex];
-                //console.log("Current Question: " + currentQuestion);
                 speechOutputAnalysis = "The correct answer is " + correctAnswerText + ". ";
-                CARD_TEXT = currentQuestionText + " / " + correctAnswerText;
-                
-                // //make a card if the user gets the answer wrong so they can review
-                // callback(session.attributes,
-                // buildSpeechletResponse(correctAnswerText, CARD_TEXT, speechOutput, repromptText, false));
             }
-            //speechOutputAnalysis += "The correct answer is " + correctAnswerText + ". ";
         }
         // if currentQuestionIndex is 4, we've reached 5 questions (zero-indexed) and can exit the game session
         if (currentQuestionIndex == GAME_LENGTH - 1) {
-            //speechOutput = userGaveUp ? "" : "That answer is ";
-            // speechOutput += speechOutputAnalysis + "You got " + currentScore.toString() + " out of "
-            //     + GAME_LENGTH.toString() + " questions correct. Thanks for playing. Ciao!";
 
             //vary responses based on score
             switch (currentScore) {
@@ -500,25 +486,30 @@ function handleAnswerRequest(intent, session, callback) {
                     break;
                 case 1:
                     speechOutput += speechOutputAnalysis + "You got " + currentScore.toString() + " out of "
-                    + GAME_LENGTH.toString() + " questions correct. Take a look at the card in your Alexa App and try again . Ciao! ";
+                    + GAME_LENGTH.toString() + " questions correct. Review the flavors you missed in your Alexa App and try again . Ciao! ";
                     break;
                 case 0:
                      speechOutput += speechOutputAnalysis + "Oh dear . You got " + currentScore.toString() + " out of "
                     + GAME_LENGTH.toString() + " questions correct. Study the card in your Alexa App and try again . Ciao! ";
                     break;
             }
-            
-            callback(session.attributes,
-                buildSpeechletResponse(currentQuestionText, CARD_TEXT, speechOutput, "", true));
+            if(currentQuestionCorrect) { //hide card
+                callback(sessionAttributes,
+                    buildSpeechletResponseWithoutCard(speechOutput, " ", true)
+                    );
+            } else {//show card
+                callback(sessionAttributes,
+                    buildSpeechletResponse(currentQuestionText, CARD_TEXT, speechOutput, " ", true)
+                    );
+            }
         } else {
             currentQuestionIndex += 1;
             var spokenQuestion = Object.keys(questions[gameQuestions[currentQuestionIndex]]);
             // Generate a random index for the correct answer, from 0 to 3
             correctAnswerIndex = Math.floor(Math.random() * (ANSWER_COUNT));
             var roundAnswers = populateRoundAnswers(gameQuestions, currentQuestionIndex, correctAnswerIndex),
-
                 questionIndexForSpeech = currentQuestionIndex + 1,
-                repromptText =  spokenQuestion ;
+                repromptText =  spokenQuestion;
             for (var i = 0; i < ANSWER_COUNT; i++) {
                 repromptText +=  ""
             }
@@ -537,8 +528,15 @@ function handleAnswerRequest(intent, session, callback) {
                 "currentQuestionText":
                     questions[gameQuestions[currentQuestionIndex]][Object.keys(questions[gameQuestions[currentQuestionIndex]])[0]][1]
             };
-            callback(sessionAttributes,
-                buildSpeechletResponse(currentQuestionText, CARD_TEXT, speechOutput, repromptText, false));
+            if(currentQuestionCorrect) { //hide card
+                callback(sessionAttributes,
+                    buildSpeechletResponseWithoutCard(speechOutput, repromptText, false)
+                    );
+            } else {//show card
+                callback(sessionAttributes,
+                    buildSpeechletResponse(currentQuestionText, CARD_TEXT, speechOutput, repromptText, false)
+                    );
+            }
         }
     }
 }
@@ -555,15 +553,11 @@ function handleRepeatRequest(intent, session, callback) {
 }
 
 function handleGetHelpRequest(intent, session, callback) {
-    // Provide a help prompt for the user, explaining how the game is played. Then, continue the game
-    // if there is one in progress, or provide the option to start another one.
 
     // Set a flag to track that we're in the Help state.
     session.attributes.userPromptedToContinue = true;
 
-    // Do not edit the help dialogue. This has been created by the Alexa team to demonstrate best practices.
-
-     var speechOutput = "I will say the name of a gelato flavor in italian, and you will supply the english equivalent. "
+     var speechOutput = "I will say the name of a gelato flavor in italian, and you will identify the same flavor in english. "
         + "For example, If the flavor is <audio src = \"https://s3.amazonaws.com/two-scoops/fragola.mp3\" />, you would say strawberry. To start a new game at any time, say, start new game. "
         + "To repeat the last flavor, say, repeat. "
         + "Would you like to keep playing?",
@@ -587,7 +581,6 @@ function isAnswerSlotValid(intent) {
 }
 
 // ------- Helper functions to build responses -------
-
 
 function buildSpeechletResponse(title, cardText, output, repromptText, shouldEndSession) {
     return {
