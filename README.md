@@ -5,8 +5,9 @@ This project is based on the <a href="https://github.com/amzn/alexa-skills-kit-j
 - Plays audio files
 - Uses SSML to wrap audio files
 
-##How to Use Audio Clips (7:45)
+##How to Use Audio Clips - video tutorial
 <a href="https://vimeo.com/175782366" target="_new">
 <img src ="https://github.com/LizMyers/SpeakGelato/blob/master/icons/audioTut.png" />
 </a>
+###### (runtime 7:45)
 
