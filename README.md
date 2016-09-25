@@ -6,3 +6,4 @@ This project is based on the <a href="https://github.com/amzn/alexa-skills-kit-j
 - Uses SSML to wrap audio files
 
 ##How to Use Audio Clips - Video Tutorial
+<a href="https://vimeo.com/175782366">Video Thumbnail</a>
